@@ -4,8 +4,13 @@ import '../services/database_service.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final int userId;
+  final Map<String, dynamic>? transaction;
 
-  const AddTransactionScreen({super.key, required this.userId});
+  const AddTransactionScreen({
+    super.key,
+    required this.userId,
+    this.transaction,
+  });
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -33,6 +38,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         '教育': '📚',
         '医疗': '💊',
       };
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.transaction != null) {
+      _type = widget.transaction!['type'];
+      _selectedCategory = widget.transaction!['category'];
+      _amountController.text = widget.transaction!['amount'].toString();
+      _noteController.text = widget.transaction!['note'] ?? '';
+      _selectedDate = DateTime.fromMillisecondsSinceEpoch(
+        widget.transaction!['date'] * 1000,
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -65,21 +84,30 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await DatabaseService.instance.addTransaction({
-        'user_id': widget.userId,
+      final transactionData = {
         'type': _type,
         'category': _selectedCategory,
         'amount': double.parse(_amountController.text),
         'date': _selectedDate.millisecondsSinceEpoch ~/ 1000,
         'note': _noteController.text.trim(),
-      });
+      };
+
+      if (widget.transaction != null) {
+        await DatabaseService.instance.updateTransaction(
+          widget.transaction!['id'],
+          transactionData,
+        );
+      } else {
+        transactionData['user_id'] = widget.userId;
+        await DatabaseService.instance.addTransaction(transactionData);
+      }
 
       if (mounted) {
         Navigator.pop(context, true);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('添加失败: $e')),
+        SnackBar(content: Text('${widget.transaction != null ? "更新" : "添加"}失败: $e')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -92,7 +120,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('添加记录'),
+        title: Text(widget.transaction != null ? '编辑记录' : '添加记录'),
       ),
       body: Form(
         key: _formKey,
@@ -171,14 +199,33 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               runSpacing: 12,
               children: categories.map((category) {
                 final isSelected = _selectedCategory == category;
-                return FilterChip(
-                  label: Text('${categoryIcons[category]} $category'),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() => _selectedCategory = category);
-                  },
-                  selectedColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  checkmarkColor: Theme.of(context).colorScheme.primary,
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey[300]!,
+                      width: isSelected ? 2 : 1,
+                    ),
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                        : Colors.transparent,
+                  ),
+                  child: FilterChip(
+                    label: Text('${categoryIcons[category]} $category'),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() => _selectedCategory = category);
+                    },
+                    selectedColor: Colors.transparent,
+                    checkmarkColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
                 );
               }).toList(),
             ),
@@ -210,7 +257,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('添加'),
+                    : Text(widget.transaction != null ? '更新' : '添加'),
               ),
             ),
           ],

@@ -49,6 +49,19 @@ class DatabaseService {
         FOREIGN KEY (user_id) REFERENCES users(id)
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE budgets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        category TEXT NOT NULL,
+        amount REAL NOT NULL,
+        month TEXT NOT NULL,
+        created_at INTEGER DEFAULT (strftime('%s', 'now')),
+        UNIQUE(user_id, category, month),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    ''');
   }
 
   // SHA-256 加密
@@ -224,5 +237,86 @@ class DatabaseService {
   Future close() async {
     final db = await instance.database;
     db.close();
+  }
+
+  // 添加预算
+  Future<int> addBudget(Map<String, dynamic> budget) async {
+    final db = await instance.database;
+    return await db.insert('budgets', budget, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  // 获取预算
+  Future<List<Map<String, dynamic>>> getBudgets(int userId, {String? month}) async {
+    final db = await instance.database;
+
+    String query = 'SELECT * FROM budgets WHERE user_id = ?';
+    List<dynamic> args = [userId];
+
+    if (month != null) {
+      query += ' AND month = ?';
+      args.add(month);
+    }
+
+    return await db.rawQuery(query, args);
+  }
+
+  // 获取预算使用情况
+  Future<Map<String, dynamic>> getBudgetUsage(int userId, String month) async {
+    final db = await instance.database;
+
+    final budgets = await db.rawQuery(
+      'SELECT * FROM budgets WHERE user_id = ? AND month = ?',
+      [userId, month],
+    );
+
+    final expenses = await db.rawQuery('''
+      SELECT category, SUM(amount) as total
+      FROM transactions
+      WHERE user_id = ? AND type = 'expense'
+        AND strftime('%Y-%m', datetime(date, 'unixepoch')) = ?
+      GROUP BY category
+    ''', [userId, month]);
+
+    Map<String, dynamic> result = {};
+
+    for (var budget in budgets) {
+      final category = budget['category'];
+      final budgetAmount = budget['amount'];
+      final spent = expenses.firstWhere(
+        (e) => e['category'] == category,
+        orElse: () => {'total': 0},
+      )['total'] as num;
+      final remaining = budgetAmount - spent.toDouble();
+
+      result[category] = {
+        'budget': budgetAmount,
+        'spent': spent.toDouble(),
+        'remaining': remaining,
+        'percentage': (spent.toDouble() / budgetAmount * 100).clamp(0, 100),
+      };
+    }
+
+    return result;
+  }
+
+  // 更新预算
+  Future<int> updateBudget(int id, Map<String, dynamic> budget) async {
+    final db = await instance.database;
+    return await db.update(
+      'budgets',
+      budget,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // 删除预算
+  Future<int> deleteBudget(int id) async {
+    final db = await instance.database;
+    return await db.delete(
+      'budgets',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }
