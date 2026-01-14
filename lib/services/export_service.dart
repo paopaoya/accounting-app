@@ -1,8 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus';
+import 'package:share_plus/share_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 
 class ExportService {
   static Future<void> exportToCSV(
@@ -68,7 +69,7 @@ class ExportService {
       }).toList(),
     };
 
-    final jsonData = const JsonEncoder.withIndent('  ').convert(exportData);
+    final jsonData = JsonEncoder.withIndent('  ').convert(exportData);
     final fileName = '记账数据_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.json';
 
     try {

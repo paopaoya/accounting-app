@@ -280,19 +280,19 @@ class DatabaseService {
     Map<String, dynamic> result = {};
 
     for (var budget in budgets) {
-      final category = budget['category'];
-      final budgetAmount = budget['amount'];
+      final category = budget['category'] as String;
+      final budgetAmount = budget['amount'] as num;
       final spent = expenses.firstWhere(
         (e) => e['category'] == category,
         orElse: () => {'total': 0},
-      )['total'] as num;
-      final remaining = budgetAmount - spent.toDouble();
+      )['total'] as num? ?? 0;
+      final remaining = budgetAmount.toDouble() - spent.toDouble();
 
       result[category] = {
-        'budget': budgetAmount,
+        'budget': budgetAmount.toDouble(),
         'spent': spent.toDouble(),
         'remaining': remaining,
-        'percentage': (spent.toDouble() / budgetAmount * 100).clamp(0, 100),
+        'percentage': (spent.toDouble() / budgetAmount.toDouble() * 100).clamp(0, 100),
       };
     }
 

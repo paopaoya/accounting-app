@@ -105,29 +105,28 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon: Icon(widget.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-              onPressed: widget.toggleTheme,
-            ),
-          ],
-        ),
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: widget.isDarkMode
-                  ? [const Color(0xFF1a1a2e), const Color(0xFF16213e)]
-                  : [const Color(0xFF667EEA), const Color(0xFF764BA2)],
-            ),
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(widget.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: widget.toggleTheme,
           ),
-          child: SafeArea(
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: widget.isDarkMode
+                ? [const Color(0xFF1a1a2e), const Color(0xFF16213e)]
+                : [const Color(0xFF667EEA), const Color(0xFF764BA2)],
+          ),
+        ),
+        child: SafeArea(
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
