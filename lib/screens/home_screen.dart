@@ -166,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
-            onPressed: toggleTheme,
+            onPressed: widget.toggleTheme,
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
@@ -314,7 +314,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     spacing: 8,
                     children: [
                       AnimatedFilterChip(
-                        label: const Text('全部'),
+                        label: const Text('全部', style: TextStyle(fontSize: 14)),
                         selected: _filterType == null,
                         onSelected: (selected) {
                           setState(() {
@@ -324,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
                       AnimatedFilterChip(
-                        label: const Text('💰 收入'),
+                        label: const Text('💰 收入', style: TextStyle(fontSize: 14)),
                         selected: _filterType == 'income',
                         onSelected: (selected) {
                           setState(() {
@@ -334,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
                       AnimatedFilterChip(
-                        label: const Text('💸 支出'),
+                        label: const Text('💸 支出', style: TextStyle(fontSize: 14)),
                         selected: _filterType == 'expense',
                         onSelected: (selected) {
                           setState(() {

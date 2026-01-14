@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AnimatedFilterChip extends StatelessWidget {
-  final String label;
+  final Widget label;
   final bool selected;
   final ValueChanged<bool> onSelected;
 
@@ -29,7 +29,7 @@ class AnimatedFilterChip extends StatelessWidget {
             : Colors.white,
       ),
       child: FilterChip(
-        label: Text(label),
+        label: label,
         selected: selected,
         onSelected: onSelected,
         selectedColor: Colors.transparent,
